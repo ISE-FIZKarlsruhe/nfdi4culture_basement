@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIDO Source-Path Atlas — DDB S6 · CIDOC-CRM mapping</title>
+<style>
+:root{
+  --bg:#ECEFEC; --panel:#FFFFFF; --panel-2:#F6F8F6;
+  --ink:#20292A; --muted:#5C6B68; --line:#D8DEDA; --line-soft:#E6EAE6;
+  --verdigris:#2F7D6D; --verdigris-deep:#1F5A4E; --patina:#DCEAE5;
+  --carmine:#B0432E; --bronze:#8A6B42; --bronze-bg:#F1E9DC;
+  --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:"Avenir Next","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);display:flex;flex-direction:column}
+
+/* ───────── header ───────── */
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:14px 22px 12px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.brand .eyebrow{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--verdigris);font-weight:600}
+.brand h1{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.brand .sub{font-size:12px;color:var(--muted)}
+.stats{display:flex;gap:22px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.stat{text-align:right}
+.stat b{display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ring{position:relative;width:54px;height:54px}
+.ring svg{transform:rotate(-90deg)}
+.ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--verdigris-deep)}
+
+/* ───────── layout ───────── */
+main{flex:1;display:flex;min-height:0}
+#left{flex:1;display:flex;flex-direction:column;min-width:0}
+#inspector{width:400px;flex:none;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel-2);flex-wrap:wrap}
+.tabs{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
+.tabs button{border:0;background:none;padding:6px 14px;font:600 12.5px var(--sans);color:var(--muted);cursor:pointer}
+.tabs button.on{background:var(--verdigris);color:#fff}
+.tabs button:not(.on):hover{background:var(--patina)}
+#q{flex:1;min-width:160px;max-width:380px;padding:7px 11px;border:1px solid var(--line);border-radius:7px;font:13px var(--mono);background:var(--panel)}
+#q:focus{outline:2px solid var(--verdigris);outline-offset:-1px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 12px;font:600 12px var(--sans);color:var(--muted);cursor:pointer}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+select{padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font:12.5px var(--sans);color:var(--ink)}
+.tbtn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:6px 12px;font:600 12px var(--sans);cursor:pointer;color:var(--ink)}
+.tbtn:hover{border-color:var(--verdigris);color:var(--verdigris-deep)}
+.spacer{flex:1}
+
+#view{flex:1;overflow:auto;padding:8px 0 60px}
+
+/* ───────── tree ───────── */
+.tnode{user-select:none}
+.trow{display:flex;align-items:center;gap:8px;padding:3px 16px 3px 0;cursor:pointer;border-left:3px solid transparent}
+.trow:hover{background:var(--patina)}
+.trow.sel{background:var(--patina);border-left-color:var(--verdigris)}
+.tw{width:18px;flex:none;text-align:center;color:var(--muted);font-size:10px}
+.tname{font:13px var(--mono);white-space:nowrap}
+.tname.leaf{color:var(--ink)}
+.tname.branch{color:var(--verdigris-deep);font-weight:600}
+.tcount{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;margin-left:auto;flex:none}
+.bar{flex:none;width:130px;height:7px;background:var(--line-soft);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--verdigris),#5BA391);border-radius:4px}
+.rep{flex:none;font:600 10px var(--mono);color:var(--bronze);background:var(--bronze-bg);border-radius:4px;padding:1px 5px}
+.mdot{flex:none;width:9px;height:9px;border-radius:50%;border:1.6px solid var(--verdigris)}
+.mdot.yes{background:var(--verdigris)}
+.mdot.no{border-color:#B9C4C0}
+
+/* ───────── table ───────── */
+table{width:100%;border-collapse:collapse}
+thead th{position:sticky;top:0;background:var(--panel-2);border-bottom:1px solid var(--line);padding:8px 10px;font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer;white-space:nowrap}
+thead th:hover{color:var(--verdigris-deep)}
+tbody td{padding:5px 10px;border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--patina)}
+tbody tr.sel{background:var(--patina);box-shadow:inset 3px 0 var(--verdigris)}
+td.path{font:12.5px var(--mono);max-width:0;width:60%}
+td.path .pwrap{display:flex;min-width:0}
+td.path .dim{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:34px}
+td.path .lastseg{flex:none;white-space:nowrap}
+td.num{text-align:right;font:12.5px var(--mono)}
+td.crm{font:11.5px var(--mono);color:var(--verdigris-deep);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+
+/* ───────── inspector ───────── */
+#inspector .ihead{padding:14px 18px 10px;border-bottom:1px solid var(--line)}
+#inspector .ihead .eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+#ipath{font:12.5px/1.55 var(--mono);word-break:break-all;margin-top:6px}
+#ipath .seg-last{color:var(--verdigris-deep);font-weight:700}
+#ibody{flex:1;overflow:auto;padding:14px 18px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.fact{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:8px;padding:8px 10px}
+.fact b{display:block;font:600 15px var(--mono);font-variant-numeric:tabular-nums}
+.fact span{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.repdetail{font:11.5px var(--mono);color:var(--bronze);background:var(--bronze-bg);border-radius:8px;padding:8px 10px;margin-bottom:16px;line-height:1.7}
+.flabel{font:600 11px var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+.ifield{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font:12.5px var(--mono);background:var(--panel)}
+.ifield:focus{outline:2px solid var(--verdigris);outline-offset:-1px}
+textarea.ifield{font:12.5px var(--sans);resize:vertical;min-height:54px}
+.sugg{border:1px dashed var(--verdigris);background:#F0F7F4;border-radius:8px;padding:10px 12px;margin-top:16px}
+.sugg .stitle{font:600 10.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--verdigris-deep);margin-bottom:4px}
+.sugg .smap{font:12px var(--mono);line-height:1.6}
+.sugg button{margin-top:8px}
+.btn{border:0;border-radius:7px;padding:8px 14px;font:600 12.5px var(--sans);cursor:pointer}
+.btn.pri{background:var(--verdigris);color:#fff}
+.btn.pri:hover{background:var(--verdigris-deep)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--carmine);color:var(--carmine)}
+.irow{display:flex;gap:8px;margin-top:14px}
+.empty{color:var(--muted);padding:40px 24px;text-align:center;font-size:13px}
+.statusline{font:11px var(--mono);color:var(--muted);padding:6px 18px;border-top:1px solid var(--line-soft)}
+
+/* footer toolbar */
+footer{border-top:1px solid var(--line);background:var(--panel);padding:9px 22px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+footer .note{font-size:11.5px;color:var(--muted);margin-left:auto}
+#toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font:12.5px var(--sans);opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.show{opacity:1}
+
+@media (max-width:980px){
+  main{flex-direction:column;overflow:auto}
+  #left{min-height:55vh}
+  #inspector{width:auto;border-left:0;border-top:2px solid var(--verdigris);max-height:48vh}
+  .bar{width:64px}
+}
+:focus-visible{outline:2px solid var(--verdigris);outline-offset:1px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="eyebrow">Deutsche Digitale Bibliothek · S6 harvest</div>
+    <h1>LIDO Source-Path Atlas</h1>
+    <div class="sub">XPath frequency &amp; CIDOC-CRM mapping workbench</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="st-paths">–</b><span>canonical paths</span></div>
+    <div class="stat"><b id="st-raw">–</b><span>raw xpath lines</span></div>
+    <div class="stat"><b id="st-occ">–</b><span>element occurrences</span></div>
+    <div class="stat"><b id="st-mapped">0</b><span>mapped</span></div>
+    <div class="ring" title="Mapping coverage">
+      <svg width="54" height="54" viewBox="0 0 54 54">
+        <circle cx="27" cy="27" r="22" fill="none" stroke="var(--line-soft)" stroke-width="6"/>
+        <circle id="ringArc" cx="27" cy="27" r="22" fill="none" stroke="var(--verdigris)" stroke-width="6"
+                stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="138.2"/>
+      </svg>
+      <div class="pct" id="ringPct">0%</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="left">
+    <div class="toolbar">
+      <div class="tabs" role="tablist">
+        <button id="tabTree" class="on" role="tab">Tree</button>
+        <button id="tabTable" role="tab">Table</button>
+      </div>
+      <input id="q" type="search" placeholder="Filter paths…  e.g. eventActor, appellationValue" aria-label="Filter paths">
+      <button class="chip" id="chipUnmapped" title="Show only unmapped paths">unmapped only</button>
+      <select id="sortSel" aria-label="Sort table">
+        <option value="c-desc">Sort: count ▾</option>
+        <option value="c-asc">Sort: count ▴</option>
+        <option value="p-asc">Sort: path A–Z</option>
+        <option value="v-desc">Sort: variants ▾</option>
+        <option value="d-desc">Sort: depth ▾</option>
+      </select>
+      <span class="spacer"></span>
+      <button class="tbtn" id="expandAll">Expand all</button>
+      <button class="tbtn" id="collapseAll">Collapse</button>
+    </div>
+    <div id="view" tabindex="0"></div>
+    <div class="statusline" id="statusline"></div>
+  </div>
+
+  <aside id="inspector" aria-label="Path inspector and CRM mapping editor">
+    <div class="ihead">
+      <div class="eyebrow">Inspector</div>
+      <div id="ipath" aria-live="polite"><span style="color:var(--muted)">No path selected</span></div>
+    </div>
+    <div id="ibody">
+      <div class="empty">Select a path in the tree or table to inspect its usage and assign a CIDOC-CRM mapping.</div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <button class="btn pri" id="expJson">Export mappings (JSON)</button>
+  <button class="btn pri" id="expCsv" style="background:var(--ink)">Export table + mappings (CSV)</button>
+  <button class="btn ghost" id="impJson">Import mappings…</button>
+  <input type="file" id="impFile" accept=".json" hidden>
+  <span class="note">Mappings live in this session — export to keep your work. Unprefixed segments are <code>lido:</code>.</span>
+</footer>
+
+<div id="toast" role="status"></div>
+
+<datalist id="dl-classes"></datalist>
+<datalist id="dl-props"></datalist>
+
+<script id="DATA" type="application/json">{"paths":[{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectConcept/term","c":9267184,"v":2572,"m":{"term":40,"subjectSet":174,"subjectConcept":268}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/termMaterialsTech/term","c":3829824,"v":1507,"m":{"termMaterialsTech":32,"eventMaterialsTech":24,"term":38,"eventSet":19,"materialsTech":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/namePlaceSet/appellationValue","c":3532558,"v":1979,"m":{"eventSet":63,"appellationValue":55,"namePlaceSet":65,"eventPlace":33,"place":4}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/classificationWrap/classification/term","c":3468135,"v":111,"m":{"classification":15,"term":13,"objectClassificationWrap":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRepresentation/linkResource","c":3445781,"v":2675,"m":{"resourceRepresentation":4,"resourceSet":684}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/displayDate","c":3433748,"v":386,"m":{"eventSet":64,"displayDate":23}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventType/term","c":3406294,"v":190,"m":{"eventSet":65,"term":3,"eventType":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectConcept/conceptID","c":3299222,"v":1452,"m":{"conceptID":21,"subjectSet":173,"subjectConcept":268}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/displayPlace","c":3216113,"v":1098,"m":{"eventSet":63,"displayPlace":40,"eventPlace":33}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/nameActorSet/appellationValue","c":3202475,"v":2152,"m":{"eventActor":84,"nameActorSet":49,"eventSet":47,"appellationValue":93,"actorInRole":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/displaySubject","c":3132387,"v":113,"m":{"subjectSet":75,"displaySubject":21}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/measurementsSet/measurementType","c":3035669,"v":710,"m":{"measurementsSet":18,"objectMeasurementsSet":197,"measurementType":2}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/objectWorkTypeWrap/objectWorkType/term","c":2913513,"v":128,"m":{"objectWorkType":8,"term":39,"objectClassificationWrap":1}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsType/term","c":2795543,"v":2088,"m":{"resourceSet":684,"rightsType":2,"rightsResource":3,"term":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/measurementsSet/measurementUnit","c":2755265,"v":632,"m":{"measurementsSet":18,"objectMeasurementsSet":197,"measurementUnit":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/measurementsSet/measurementValue","c":2737100,"v":554,"m":{"measurementsSet":18,"objectMeasurementsSet":197}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/titleWrap/titleSet/appellationValue","c":2643562,"v":67,"m":{"titleSet":58,"appellationValue":3}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsHolder/legalBodyName/appellationValue","c":2547746,"v":1989,"m":{"resourceSet":684,"rightsHolder":2,"rightsResource":2,"appellationValue":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/workID","c":2460332,"v":24,"m":{"workID":16,"repositorySet":5}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsType/conceptID","c":2437601,"v":1919,"m":{"resourceSet":684,"rightsType":2,"rightsResource":3}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceType/term","c":2393552,"v":685,"m":{"resourceSet":684}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/displayObjectMeasurements","c":2308428,"v":342,"m":{"objectMeasurementsSet":197,"displayObjectMeasurements":4}},{"p":"/lido/administrativeMetadata/recordWrap/recordSource/legalBodyName/appellationValue","c":2241533,"v":9,"m":{"recordSource":2,"appellationValue":4}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/roleActor/term","c":2214026,"v":499,"m":{"eventActor":84,"eventSet":23,"roleActor":6,"term":2}},{"p":"/lido/administrativeMetadata/recordWrap/recordType/term","c":2177549,"v":3,"m":{"term":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventType/conceptID","c":2149952,"v":73,"m":{"eventSet":65,"conceptID":3,"eventType":2}},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsType/term","c":2138991,"v":9,"m":{"recordRights":3,"term":2}},{"p":"/lido/administrativeMetadata/recordWrap/recordID","c":2109537,"v":3,"m":{"recordID":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyName/appellationValue","c":2109064,"v":15,"m":{"appellationValue":4,"repositorySet":8,"legalBodyName":2}},{"p":"/lido/lidoRecID","c":2104546,"v":1},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsType/conceptID","c":2101935,"v":3,"m":{"recordRights":3}},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsHolder/legalBodyName/appellationValue","c":2092519,"v":7,"m":{"recordRights":2,"rightsHolder":2,"appellationValue":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/actorID","c":2050667,"v":2448,"m":{"eventActor":71,"actorID":64,"eventSet":47}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyID","c":2025052,"v":5,"m":{"legalBodyID":3,"repositorySet":1}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/displayMaterialsTech","c":1990404,"v":118,"m":{"eventMaterialsTech":24,"eventSet":65,"displayMaterialsTech":3}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/namePlaceSet/appellationValue","c":1976254,"v":25,"m":{"namePlaceSet":2,"appellationValue":5,"repositorySet":8}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyWeblink","c":1968221,"v":2,"m":{"repositorySet":1}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/displayActorInRole","c":1942051,"v":293,"m":{"eventActor":84,"eventSet":47,"displayActorInRole":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceSource/legalBodyName/appellationValue","c":1877499,"v":1100,"m":{"resourceSource":8,"resourceSet":465,"appellationValue":2,"legalBodyName":3}},{"p":"/lido/administrativeMetadata/recordWrap/recordSource/legalBodyWeblink","c":1841667,"v":3,"m":{"recordSource":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceID","c":1841321,"v":703,"m":{"resourceSet":684,"resourceID":2}},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsHolder/legalBodyWeblink","c":1802519,"v":5,"m":{"recordRights":2,"rightsHolder":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectObject/object/objectNote","c":1797089,"v":100,"m":{"subjectSet":189,"subjectObject":9,"object":36}},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsHolder/legalBodyID","c":1681088,"v":8,"m":{"recordRights":2,"legalBodyID":3,"rightsHolder":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/nameActorSet/appellationValue","c":1676505,"v":4711,"m":{"subjectSet":188,"nameActorSet":113,"appellationValue":155,"subjectActor":71}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/date/earliestDate","c":1659674,"v":55,"m":{"eventSet":64}},{"p":"/lido/administrativeMetadata/recordWrap/recordSource/legalBodyID","c":1619130,"v":7,"m":{"legalBodyID":4,"recordSource":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/date/latestDate","c":1614645,"v":55,"m":{"eventSet":64}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsHolder/legalBodyID","c":1559021,"v":924,"m":{"resourceSet":684,"rightsHolder":1,"rightsResource":2,"legalBodyID":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsHolder/legalBodyWeblink","c":1491489,"v":539,"m":{"resourceSet":373,"rightsHolder":1,"rightsResource":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/placeID","c":1478691,"v":441,"m":{"eventSet":63,"placeID":11,"eventPlace":30}},{"p":"/lido/administrativeMetadata/recordWrap/recordInfoSet/recordInfoLink","c":1423686,"v":6,"m":{"recordInfoSet":3,"recordInfoLink":2}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsHolder/legalBodyName/appellationValue","c":1367827,"v":11,"m":{"rightsWorkSet":4,"appellationValue":4,"rightsHolder":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/placeID","c":1343393,"v":23,"m":{"placeID":3,"repositorySet":8}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/partOfPlace/namePlaceSet/appellationValue","c":1342482,"v":105,"m":{"partOfPlace":4,"namePlaceSet":4,"repositorySet":8}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/objectWorkTypeWrap/objectWorkType/conceptID","c":1324469,"v":40,"m":{"conceptID":12,"objectWorkType":7}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/classificationWrap/classification/conceptID","c":1086636,"v":72,"m":{"classification":14,"conceptID":7}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsHolder/legalBodyID","c":1086057,"v":5,"m":{"legalBodyID":2,"rightsWorkSet":2}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsHolder/legalBodyWeblink","c":1057653,"v":3,"m":{"rightsWorkSet":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/termMaterialsTech/conceptID","c":1036105,"v":626,"m":{"eventMaterialsTech":24,"conceptID":17,"eventSet":10,"termMaterialsTech":17}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsType/term","c":1007421,"v":7,"m":{"rightsWorkSet":4,"rightsType":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectDescriptionWrap/objectDescriptionSet/descriptiveNoteValue","c":942598,"v":56,"m":{"objectDescriptionSet":43,"descriptiveNoteValue":3}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/namePlaceSet/appellationValue","c":929571,"v":66,"m":{"namePlaceSet":14,"partOfPlace":5,"eventSet":6,"eventPlace":3}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceSource/legalBodyID","c":909204,"v":88,"m":{"resourceSource":3,"resourceSet":37}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsType/conceptID","c":908530,"v":3,"m":{"rightsWorkSet":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceSource/legalBodyWeblink","c":903465,"v":35,"m":{"resourceSource":2,"resourceSet":25}},{"p":"/lido/administrativeMetadata/recordWrap/recordInfoSet/recordMetadataDate","c":897798,"v":10,"m":{"recordInfoSet":2,"recordMetadataDate":3}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventID","c":777899,"v":65,"m":{"eventSet":64}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/namePlaceSet/appellationValue","c":773175,"v":1837,"m":{"subjectSet":116,"appellationValue":40,"subjectPlace":17}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/displayPlace","c":763723,"v":1662,"m":{"subjectSet":116,"displayPlace":40,"subjectPlace":9}},{"p":"/lido/category/term","c":719094,"v":3,"m":{"term":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/displayEvent","c":709304,"v":75,"m":{"eventSet":64,"displayEvent":4}},{"p":"/lido/administrativeMetadata/recordWrap/recordType/conceptID","c":629785,"v":1},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/partOfPlace/partOfPlace/namePlaceSet/appellationValue","c":629417,"v":1},{"p":"/lido/objectPublishedID","c":624393,"v":3,"m":{"objectPublishedID":2}},{"p":"/lido/category/conceptID","c":591383,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWorkRelType/term","c":576277,"v":1059,"m":{"relatedWorkSet":1008,"term":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/vitalDatesActor/earliestDate","c":572701,"v":229,"m":{"eventActor":71,"eventSet":47}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/vitalDatesActor/latestDate","c":518131,"v":154,"m":{"eventSet":47,"eventActor":67}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/extentMeasurements","c":496925,"v":55,"m":{"objectMeasurementsSet":26,"extentMeasurements":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/actorID","c":487717,"v":796,"m":{"subjectSet":186,"actorID":23,"subjectActor":71}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/partOfPlace/placeID","c":468209,"v":7,"m":{"placeID":2,"partOfPlace":4}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceDescription","c":450920,"v":1842,"m":{"resourceSet":684,"resourceDescription":3}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWork/displayObject","c":411240,"v":1050,"m":{"relatedWorkSet":1008,"displayObject":3}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/inscriptionsWrap/inscriptions/inscriptionDescription/descriptiveNoteValue","c":395940,"v":129,"m":{"inscriptions":55,"inscriptionDescription":10,"descriptiveNoteValue":5}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWork/object/objectNote","c":378271,"v":978,"m":{"relatedWorkSet":908,"objectNote":3}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/roleActor/conceptID","c":357924,"v":211,"m":{"eventSet":11,"conceptID":3,"eventActor":31,"roleActor":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/creditLine","c":337133,"v":471,"m":{"resourceSet":465,"rightsResource":4,"creditLine":2}},{"p":"/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/creditLine","c":323849,"v":6,"m":{"rightsWorkSet":3,"creditLine":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWork/object/objectID","c":321158,"v":1180,"m":{"relatedWorkSet":1008,"objectID":13}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/inscriptionsWrap/inscriptions/inscriptionTranscription","c":275713,"v":122,"m":{"inscriptions":55,"inscriptionTranscription":3}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRelType/term","c":272241,"v":35,"m":{"resourceSet":141}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceDateTaken/displayDate","c":245933,"v":82,"m":{"resourceSet":81}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDescriptionSet/descriptiveNoteValue","c":224902,"v":91,"m":{"eventSet":64,"eventDescriptionSet":4,"descriptiveNoteValue":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWork/object/objectWebResource","c":202516,"v":1021,"m":{"relatedWorkSet":1008,"objectWebResource":4}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/displayActor","c":199625,"v":342,"m":{"subjectSet":188,"subjectActor":71,"displayActor":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourcePerspective/conceptID","c":177580,"v":9,"m":{"resourceSet":2,"conceptID":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/culture/term","c":174018,"v":193,"m":{"eventSet":8,"term":48,"culture":27}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/placeID","c":166671,"v":600,"m":{"subjectSet":86,"placeID":11,"subjectPlace":17}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRepresentation/resourceMeasurementsSet/measurementType","c":161450,"v":138,"m":{"resourceSet":62,"resourceRepresentation":2,"resourceMeasurementsSet":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRepresentation/resourceMeasurementsSet/measurementUnit","c":161450,"v":138,"m":{"resourceSet":62,"resourceRepresentation":2,"resourceMeasurementsSet":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRepresentation/resourceMeasurementsSet/measurementValue","c":161450,"v":138,"m":{"resourceSet":62,"resourceRepresentation":2,"resourceMeasurementsSet":2}},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/creditLine","c":159153,"v":5,"m":{"recordRights":3,"creditLine":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/gml/gml:Point/gml:pos","c":158317,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventType/term","c":157759,"v":65,"m":{"subjectSet":77}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourcePerspective/term","c":146011,"v":3,"m":{"resourceSet":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventDate/displayDate","c":143300,"v":143,"m":{"subjectSet":77,"eventDate":8}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventType/conceptID","c":143282,"v":61,"m":{"subjectSet":76}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/placeClassification/term","c":138941,"v":53,"m":{"eventSet":4,"eventPlace":29,"place":4}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWorkRelType/conceptID","c":134146,"v":1009,"m":{"relatedWorkSet":1008}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventDate/date/earliestDate","c":129012,"v":139,"m":{"subjectSet":76,"eventDate":8,"earliestDate":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventDate/date/latestDate","c":128585,"v":139,"m":{"subjectSet":76,"eventDate":8,"latestDate":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectDescriptionWrap/objectDescriptionSet/sourceDescriptiveNote","c":128482,"v":22,"m":{"objectDescriptionSet":7,"sourceDescriptiveNote":6}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/nationalityActor/term","c":122468,"v":59,"m":{"eventSet":14,"eventActor":27,"nationalityActor":3}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/gml/gml:Point/gml:pos","c":122066,"v":36,"m":{"eventSet":63,"eventPlace":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/thingPresent/displayObject","c":108604,"v":7,"m":{"eventSet":9}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/displayEvent","c":93148,"v":60,"m":{"subjectSet":76}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/periodName/conceptID","c":88640,"v":83,"m":{"eventSet":6,"periodName":12,"conceptID":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventActor/displayActor","c":80307,"v":6,"m":{"subjectSet":3,"eventActor":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/termMaterialsTech/term","c":77445,"v":14,"m":{"eventSet":1,"termMaterialsTech":6}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/culture/conceptID","c":67962,"v":35,"m":{"eventSet":8,"conceptID":2,"culture":10}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventActor/actorInRole/actor/nameActorSet/appellationValue","c":66148,"v":228,"m":{"subjectSet":76,"eventActor":8}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventActor/actorInRole/roleActor/term","c":65620,"v":222,"m":{"subjectSet":76,"eventActor":8}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/periodName/term","c":64451,"v":12,"m":{"eventSet":5,"periodName":4}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventPlace/displayPlace","c":61415,"v":10,"m":{"subjectSet":11,"eventPlace":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/placeClassification/term","c":57532,"v":2,"m":{"term":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectDescriptionWrap/objectDescriptionSet/descriptiveNoteID","c":57009,"v":5,"m":{"objectDescriptionSet":4}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectObject/displayObject","c":55494,"v":68,"m":{"subjectSet":189,"displayObject":36}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMaterialsTechWrap/objectMaterialsTechSet/displayMaterialsTech","c":48952,"v":3,"m":{"objectMaterialsTechSet":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/attributionQualifierActor","c":44150,"v":88,"m":{"eventSet":6,"eventActor":10,"attributionQualifierActor":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/genderActor","c":43913,"v":147,"m":{"eventSet":6,"eventActor":32}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/partOfPlace/gml/gml:Point/gml:pos","c":43657,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMethod/term","c":42178,"v":24,"m":{"eventSet":10,"term":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/displayStateEditionWrap/displayState","c":41407,"v":5,"m":{"displayStateEditionWrap":2,"displayState":2}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceDateTaken/date/earliestDate","c":40528,"v":63,"m":{"resourceSet":62}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceDateTaken/date/latestDate","c":40528,"v":63,"m":{"resourceSet":62}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/namePlaceSet/sourceAppellation","c":38974,"v":11,"m":{"eventSet":4,"eventPlace":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectDate/displayDate","c":37340,"v":134,"m":{"subjectSet":21,"displayDate":23}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/term","c":34874,"v":35,"m":{"resourceSet":34}},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/conceptID","c":34873,"v":35,"m":{"resourceSet":34}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/gml/gml:Point/gml:pos","c":33766,"v":44,"m":{"subjectSet":43}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/extentMaterialsTech","c":31906,"v":66,"m":{"eventMaterialsTech":24,"eventSet":4}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventName/appellationValue","c":30935,"v":8,"m":{"eventSet":7}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/vitalDatesActor/earliestDate","c":30074,"v":146,"m":{"subjectSet":186,"subjectActor":71}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/inscriptionsWrap/inscriptions/inscriptionDescription/descriptiveNoteID","c":27910,"v":10,"m":{"descriptiveNoteID":2,"inscriptions":5}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/placeClassification/conceptID","c":26908,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/vitalDatesActor/latestDate","c":23885,"v":150,"m":{"subjectSet":186,"subjectActor":71}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/gml/gml:Point/gml:name","c":22171,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventActor/displayActorInRole","c":21304,"v":344,"m":{"subjectSet":76,"eventActor":18}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/genderActor","c":20892,"v":50,"m":{"subjectSet":22,"subjectActor":15}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/displayStateEditionWrap/sourceStateEdition","c":19204,"v":2,"m":{"displayStateEditionWrap":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:name/mods:namePart","c":18982,"v":8,"m":{"namePart":2,"name":3}},{"p":"/mets:mets/mets:metsHdr/mets:agent/mets:name","c":17882,"v":3,"m":{"agent":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordIdentifier","c":17834,"v":2,"m":{"recordIdentifier":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:location/mods:url","c":17833,"v":4,"m":{"location":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:place/mods:placeTerm","c":17710,"v":5,"m":{"originInfo":3,"place":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:identifier","c":17692,"v":4,"m":{"identifier":3}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventMaterialsTech/displayMaterialsTech","c":12769,"v":54,"m":{"subjectSet":76}},{"p":"/marc:record/marc:datafield/marc:subfield","c":12348,"v":225,"m":{"datafield":36,"subfield":9}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/gml/gml:Polygon/gml:exterior/gml:LinearRing/gml:pos","c":11952,"v":61,"m":{"subjectSet":13,"pos":11}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/qualifierMeasurements","c":11210,"v":8,"m":{"objectMeasurementsSet":13}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:name/mods:role/mods:roleTerm","c":9491,"v":4,"m":{"name":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:name/mods:displayForm","c":9491,"v":4,"m":{"name":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordChangeDate","c":8965,"v":3,"m":{"recordChangeDate":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:genre","c":8965,"v":3,"m":{"genre":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:publisher","c":8963,"v":3,"m":{"originInfo":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordContentSource","c":8917,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordInfoNote","c":8917,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:titleInfo/mods:title","c":8917,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:edition","c":8917,"v":2,"m":{"originInfo":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:typeOfResource","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:owner","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerLogo","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerSiteURL","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerContact","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:license","c":8917,"v":1},{"p":"/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap/mets:xmlData/dv:links/dv:presentation","c":8917,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:language/mods:languageTerm","c":8916,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:dateIssued","c":8916,"v":1,"m":{"originInfo":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:dateCaptured","c":8916,"v":1,"m":{"originInfo":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:identifier","c":8872,"v":3,"m":{"relatedItem":2}},{"p":"/mets:mets/mets:metsHdr/mets:agent/mets:note","c":8869,"v":1,"m":{"agent":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:classification","c":8869,"v":1},{"p":"/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap/mets:xmlData/dv:links/dv:reference","c":8869,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:displayDate","c":8868,"v":1,"m":{"originInfo":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:physicalDescription/mods:digitalOrigin","c":8866,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:physicalDescription/mods:extent","c":8866,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:part/mods:detail/mods:number","c":8859,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/gml/gml:Polygon/gml:exterior/gml:LinearRing/gml:pos","c":8081,"v":46,"m":{"eventSet":4,"pos":11,"eventPlace":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventActor/actorInRole/actor/actorID","c":7309,"v":186,"m":{"subjectSet":76,"eventActor":8}},{"p":"/lido/administrativeMetadata/recordWrap/recordInfoSet/recordInfoID","c":6545,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/nameActorSet/sourceAppellation","c":6051,"v":27,"m":{"eventSet":2,"nameActorSet":1,"sourceAppellation":11,"eventActor":1}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectDate/date/earliestDate","c":6021,"v":22,"m":{"subjectSet":21}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectDate/date/latestDate","c":6021,"v":22,"m":{"subjectSet":21}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/namePlaceSet/placeID","c":5966,"v":1},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceType/conceptID","c":5419,"v":35,"m":{"resourceSet":34}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDescriptionSet/descriptiveNoteID","c":5288,"v":39,"m":{"eventSet":64}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/objectWorkTypeWrap/classificationWrap/classification/term","c":5268,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/termMaterialsTech","c":5127,"v":4,"m":{"eventSet":2,"eventMaterialsTech":3}},{"p":"/oai:record/oai:metadata/mets:mets/mets:metsHdr/mets:agent/mets:name","c":4476,"v":3,"m":{"agent":3}},{"p":"/rdf:Description/dc:creator/dcterms:Agent/skos:prefLabel","c":3330,"v":6,"m":{"creator":5}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/extentActor","c":3178,"v":17,"m":{"eventSet":3,"eventActor":5}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordIdentifier","c":2984,"v":2,"m":{"recordIdentifier":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordChangeDate","c":2984,"v":2,"m":{"recordChangeDate":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:genre","c":2984,"v":2,"m":{"genre":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:typeOfResource","c":2984,"v":2,"m":{"typeOfResource":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/extentSubject","c":2897,"v":24,"m":{"subjectSet":23}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/namePlaceSet/sourceAppellation","c":2771,"v":12,"m":{"subjectSet":13}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/displayMaterialTech","c":2715,"v":2,"m":{"eventMaterialsTech":3}},{"p":"/rdf:Description/dcterms:isReferencedBy/dcat:CatalogRecord/dc:identifier","c":2578,"v":1},{"p":"/rdf:Description/dcterms:isReferencedBy/dcat:CatalogRecord/dc:creator","c":2578,"v":1},{"p":"/rdf:Description/dc:title","c":2578,"v":1},{"p":"/rdf:Description/edm:isShownAt/edm:WebResource/dc:format","c":2578,"v":1},{"p":"/rdf:Description/dc:identifier/bf:Hdl/rdf:value","c":2578,"v":1,"m":{"identifier":1}},{"p":"/rdf:Description/dc:identifier/bf:Identifier/rdf:value","c":2578,"v":1,"m":{"identifier":2}},{"p":"/rdf:Description/edm:isShownBy/edm:WebResource/dc:format","c":2578,"v":1},{"p":"/rdf:Description/dc:type/skos:Concept/skos:prefLabel","c":2578,"v":1},{"p":"/rdf:Description/dc:publisher/dcterms:Agent/skos:prefLabel","c":2578,"v":1},{"p":"/rdf:Description/dcterms:isPartOf","c":2578,"v":1},{"p":"/rdf:Description/dcterms:extent","c":2460,"v":1},{"p":"/rdf:Description/dcterms:medium/skos:Concept/skos:prefLabel","c":2438,"v":1},{"p":"/rdf:Description/dcterms:spatial/dcterms:Location/skos:prefLabel","c":2200,"v":1},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsDate/earliestDate","c":2016,"v":1},{"p":"/lido/administrativeMetadata/recordWrap/recordRights/rightsDate/latestDate","c":2016,"v":1},{"p":"/rdf:Description/edm:isShownBy/edm:WebResource/dc:creator/dcterms:Agent/skos:prefLabel","c":1994,"v":1},{"p":"/rdf:Description/dcterms:rightsHolder/dcterms:Agent/skos:prefLabel","c":1994,"v":1},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/shapeMeasurements","c":1751,"v":6,"m":{"objectMeasurementsSet":5}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectObject/object/objectID","c":1680,"v":49,"m":{"subjectSet":48,"subjectObject":9}},{"p":"/rdf:Description/dc:date","c":1678,"v":1},{"p":"/oai:record/oai:header/oai:identifier","c":1492,"v":1},{"p":"/oai:record/oai:header/oai:datestamp","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:part/mods:detail/mods:number","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:dateIssued","c":1492,"v":1,"m":{"originInfo":1}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:dateCaptured","c":1492,"v":1,"m":{"originInfo":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:publisher","c":1492,"v":1,"m":{"originInfo":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:originInfo/mods:edition","c":1492,"v":1,"m":{"originInfo":2}},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:language/mods:languageTerm","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:physicalDescription/mods:extent","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:titleInfo/mods:title","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:titleInfo/mods:subTitle","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:identifier","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:recordInfo/mods:recordIdentifier","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordContentSource","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:recordInfo/mods:recordInfoNote","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:identifier","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:location/mods:url","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:owner","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerLogo","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerSiteURL","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:ownerContact","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:license","c":1492,"v":1},{"p":"/oai:record/oai:metadata/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:sponsor","c":1492,"v":1},{"p":"/rdf:Description/dc:contributor/dcterms:Agent/skos:prefLabel","c":896,"v":4,"m":{"contributor":3}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/actor/nationalityActor/term","c":893,"v":26,"m":{"subjectSet":2,"subjectActor":15}},{"p":"/marc:record/marc:controlfield","c":890,"v":5,"m":{"controlfield":5}},{"p":"/rdf:Description/dc:date/dcterms:PeriodOfTime/edm:begin","c":802,"v":1},{"p":"/rdf:Description/dc:date/dcterms:PeriodOfTime/edm:end","c":802,"v":1},{"p":"/lido/administrativeMetadata/resourceWrap/resourceSet/resourceDescription/::tail","c":589,"v":9,"m":{"resourceSet":5,"resourceDescription":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/displayStateEditionWrap/displayEdition","c":545,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:location/mods:physicalLocation","c":543,"v":1,"m":{"location":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:location/mods:shelfLocator","c":542,"v":1,"m":{"location":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:subject/mods:topic","c":499,"v":1},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:titleInfo/mods:subTitle","c":479,"v":3,"m":{"subTitle":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/displayActorInRole","c":362,"v":5,"m":{"eventSet":4}},{"p":"/rdf:Description/dc:description","c":340,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/gml/gml:Point/gml:name","c":286,"v":2,"m":{"eventSet":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventType/eventMaterialsTech/displayMaterialsTech","c":274,"v":4,"m":{"eventSet":5}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/sourceMaterialsTech","c":253,"v":11,"m":{"eventSet":4,"eventMaterialsTech":9}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventPlace/place/namePlaceSet/appellationValue","c":248,"v":8,"m":{"subjectSet":11,"eventPlace":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/relatedWorksWrap/relatedWorkSet/relatedWorkRelType","c":197,"v":4,"m":{"relatedWorkSet":3}},{"p":"/marc:record/marc:leader","c":178,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/namePlaceSet/appellationValue","c":145,"v":6,"m":{"eventSet":3,"eventPlace":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/termMaterialsTech/term","c":116,"v":40,"m":{"eventMaterialsTech":13,"term":7}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/titleWrap/titleSet/sourceAppellation","c":114,"v":3,"m":{"titleSet":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/namePlaceSet/appellationValue","c":109,"v":5,"m":{"eventSet":3,"eventPlace":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/termMaterialsTech/conceptID","c":92,"v":26,"m":{"eventMaterialsTech":13,"conceptID":3}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/scaleMeasurements","c":82,"v":6,"m":{"objectMeasurementsSet":6}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMethod/conceptID","c":81,"v":7,"m":{"eventSet":7}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/displayEvent","c":80,"v":2,"m":{"eventSet":1}},{"p":"/lidoWrap/lido/descriptiveMetadata/objectClassificationWrap/classificationWrap/classification/term","c":75,"v":13,"m":{"classification":3,"term":5}},{"p":"/lidoWrap/lido/descriptiveMetadata/objectClassificationWrap/classificationWrap/classification/conceptID","c":64,"v":10,"m":{"classification":2,"conceptID":5}},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:sponsor","c":48,"v":1},{"p":"/mets:mets/mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData/dv:rights/dv:sponsorSiteURL","c":48,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/partOfPlace/namePlaceSet/appellationValue","c":44,"v":3,"m":{"eventSet":2,"eventPlace":1}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/placeID","c":39,"v":6,"m":{"eventSet":2,"eventPlace":3}},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordSource/legalBodyName/appellationValue","c":34,"v":2,"m":{"recordSource":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/term","c":33,"v":3,"m":{"eventSet":3,"term":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/placeID","c":27,"v":5,"m":{"eventSet":2,"eventPlace":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/placeID","c":22,"v":3,"m":{"placeID":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/namePlaceSet/appellationValue","c":18,"v":5,"m":{"appellationValue":4}},{"p":"/lido/descriptiveMetadata/objectClassificationWrap/objectWorkTypeWrap/objectWorkType/conceptID","c":18,"v":1,"m":{"objectWorkType":2}},{"p":"/lidoWrap/lido/lidoRecID","c":17,"v":1},{"p":"/lidoWrap/lido/category/conceptID","c":17,"v":1},{"p":"/lidoWrap/lido/category/term","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectClassificationWrap/objectWorkTypeWrap/objectWorkType/term","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/titleWrap/titleSet/appellationValue","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyID","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyName/appellationValue","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryName/legalBodyWeblink","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/workID","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/namePlaceSet/appellationValue","c":17,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/displayObjectMeasurements","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/rightsWorkWrap/rightsWorkSet/rightsHolder/legalBodyName/appellationValue","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordID","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordType/term","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordRights/rightsType/conceptID","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordRights/rightsType/term","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordRights/rightsHolder/legalBodyName/appellationValue","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordInfoSet/recordInfoLink","c":17,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/recordWrap/recordInfoSet/recordMetadataDate","c":17,"v":1},{"p":"/lido/administrativeMetadata/recordWrap/recordSource/legalBodyName/sourceAppellation","c":16,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventType/term","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/resourceRepresentation/linkResource","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/resourceType/term","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/resourceSource/legalBodyName/appellationValue","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsType/conceptID","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsType/term","c":16,"v":1},{"p":"/lidoWrap/lido/administrativeMetadata/resourceWrap/resourceSet/rightsResource/rightsHolder/legalBodyName/appellationValue","c":16,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/placeID","c":15,"v":4,"m":{"eventSet":2,"eventPlace":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/gml/gml:Point/gml:name","c":14,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/gml/gml:Point/gml:pos","c":14,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventType/conceptID","c":13,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/nameActorSet/appellationValue","c":13,"v":4,"m":{"nameActorSet":3}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:name/mods:namePart","c":12,"v":4,"m":{"relatedItem":1,"name":2,"namePart":2}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/roleActor/term","c":11,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/date/earliestDate","c":11,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/date/latestDate","c":11,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectConcept/conceptID","c":10,"v":3,"m":{"conceptID":3}},{"p":"/lidoWrap/lido/descriptiveMetadata/objectIdentificationWrap/inscriptionsWrap/inscriptions/inscriptionDescription/descriptiveNoteValue","c":8,"v":3,"m":{"inscriptionDescription":2}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventDate/displayDate","c":8,"v":1},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/repositoryWrap/repositorySet/repositoryLocation/partOfPlace/partOfPlace/placeID","c":8,"v":2,"m":{"placeID":2}},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/inscriptionsWrap/inscriptions/inscriptionDescription/sourceDescriptiveNote","c":8,"v":6,"m":{"inscriptions":3,"sourceDescriptiveNote":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/partOfPlace/placeID","c":8,"v":3,"m":{"eventSet":2,"eventPlace":1}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventMaterialsTech/materialsTech/extentMaterialsTech","c":7,"v":4,"m":{"eventMaterialsTech":9}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:recordInfo/mods:recordIdentifier","c":6,"v":2,"m":{"relatedItem":1,"recordIdentifier":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:name/mods:role/mods:roleTerm","c":6,"v":2,"m":{"relatedItem":1,"name":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:name/mods:displayForm","c":6,"v":2,"m":{"relatedItem":1,"name":2}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/partOfPlace/placeID","c":6,"v":4,"m":{"subjectPlace":2,"subjectSet":1}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectPlace/place/partOfPlace/namePlaceSet/appellationValue","c":6,"v":4,"m":{"subjectPlace":2,"subjectSet":1}},{"p":"/lidoWrap/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectConcept/term","c":5,"v":3,"m":{"term":2}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:titleInfo/mods:title","c":3,"v":1,"m":{"relatedItem":1}},{"p":"/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:relatedItem/mods:titleInfo/mods:subTitle","c":3,"v":1,"m":{"relatedItem":1}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/actorID","c":3,"v":3,"m":{"actorID":3}},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectEvent/event/eventName/appelationValue","c":2,"v":1,"m":{"subjectSet":26}},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/vitalDatesActor/earliestDate","c":1,"v":1},{"p":"/lidoWrap/lido/descriptiveMetadata/eventWrap/eventSet/event/eventActor/actorInRole/actor/vitalDatesActor/latestDate","c":1,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/conceptID","c":1,"v":1},{"p":"/lido/descriptiveMetadata/objectRelationWrap/subjectWrap/subjectSet/subject/subjectActor/term","c":1,"v":1},{"p":"/lido/descriptiveMetadata/objectIdentificationWrap/objectMeasurementsWrap/objectMeasurementsSet/objectMeasurements/displayObjectMeasurements","c":1,"v":1},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/partOfPlace/partOfPlace/placeID","c":1,"v":1,"m":{"eventSet":2}},{"p":"/lido/descriptiveMetadata/eventWrap/eventSet/event/eventPlace/place/partOfPlace/partOfPlace/partOfPlace/partOfPlace/partOfPlace/namePlaceSet/appellationValue","c":1,"v":1,"m":{"eventSet":2}}],"rawLines":56637,"totalOcc":164023473}</script>
+<script>
+"use strict";
+/* ════════ data ════════ */
+const RAW = JSON.parse(document.getElementById('DATA').textContent);
+const PATHS = RAW.paths.map((o,i)=>({
+  id:i, p:o.p, c:o.c, v:o.v, m:o.m||null,
+  depth:o.p.split('/').length-2,
+  last:o.p.slice(o.p.lastIndexOf('/')+1)
+}));
+const MAXC = Math.max(...PATHS.map(o=>o.c));
+const LOGMAX = Math.log10(MAXC+1);
+const byPath = new Map(PATHS.map(o=>[o.p,o]));
+const mappings = new Map();   // id -> {e,pp,note}
+
+/* ════════ CIDOC-CRM vocabulary (CRM 7.x core selection) ════════ */
+const CRM_CLASSES = ["E1 CRM Entity","E2 Temporal Entity","E4 Period","E5 Event","E7 Activity","E8 Acquisition","E9 Move","E10 Transfer of Custody","E11 Modification","E12 Production","E13 Attribute Assignment","E15 Identifier Assignment","E21 Person","E22 Human-Made Object","E24 Physical Human-Made Thing","E28 Conceptual Object","E30 Right","E31 Document","E32 Authority Document","E33 Linguistic Object","E33_E41 Linguistic Appellation","E34 Inscription","E35 Title","E36 Visual Item","E39 Actor","E40 Legal Body","E41 Appellation","E42 Identifier","E52 Time-Span","E53 Place","E54 Dimension","E55 Type","E56 Language","E57 Material","E58 Measurement Unit","E60 Number","E62 String","E63 Beginning of Existence","E65 Creation","E67 Birth","E69 Death","E71 Human-Made Thing","E73 Information Object","E74 Group","E78 Curated Holding","E89 Propositional Object","E94 Space Primitive","D1 Digital Object (CRMdig)","D35 Area (CRMdig)"];
+const CRM_PROPS = ["P1 is identified by","P2 has type","P3 has note","P4 has time-span","P7 took place at","P11 had participant","P12 occurred in the presence of","P14 carried out by","P14.1 in the role of","P16 used specific object","P22 transferred title to","P24 transferred title of","P32 used general technique","P43 has dimension","P45 consists of","P46 is composed of","P48 has preferred identifier","P49 has former or current keeper","P50 has current keeper","P51 has former or current owner","P52 has current owner","P53 has former or current location","P55 has current location","P62 depicts","P65 shows visual item","P67 refers to","P70 documents","P70i is documented in","P72 has language","P82a begin of the begin","P82b end of the end","P89 falls within","P90 has value","P91 has unit","P94 has created","P94i was created by","P98 brought into life","P98i was born","P100i died in","P102 has title","P104 is subject to","P105 right held by","P106 is composed of","P108 has produced","P108i was produced by","P126 employed","P128 carries","P129 is about","P130 shows features of","P138 represents","P138i has representation","P141 assigned","P165 incorporates","P168 place is defined by","P190 has symbolic content"];
+
+/* ════════ LIDO → CRM suggestion rules (matched on path suffix, first hit wins) ════════ */
+const RULES = [
+ [/lidoRecID$/,"E22 Human-Made Object","P48 has preferred identifier → E42 Identifier","LIDO record identifier"],
+ [/objectPublishedID$/,"E22 Human-Made Object","P1 is identified by → E42 Identifier","Published/persistent object ID"],
+ [/objectWorkType\/conceptID$/,"E55 Type","P1 is identified by → E42 Identifier","Work-type concept URI (AAT/GND…)"],
+ [/objectWorkType\/term$/,"E22 Human-Made Object","P2 has type → E55 Type","Object/work type"],
+ [/classification\/conceptID$/,"E55 Type","P1 is identified by → E42 Identifier","Classification concept URI"],
+ [/classification\/term$/,"E22 Human-Made Object","P2 has type → E55 Type","Classification term"],
+ [/titleSet\/appellationValue$/,"E22 Human-Made Object","P102 has title → E35 Title","Title; qualify with P102.1 if title type present"],
+ [/repositoryName\/legalBodyID$/,"E40 Legal Body","P1 is identified by → E42 Identifier","Keeper institution ID (ISIL/GND)"],
+ [/repositoryName\/legalBodyName\/appellationValue$/,"E22 Human-Made Object","P50 has current keeper → E40 Legal Body → P1 → E41 Appellation","Repository name"],
+ [/repositoryName\/legalBodyWeblink$/,"E40 Legal Body","P70i is documented in → E31 Document","Institution homepage"],
+ [/repositorySet\/workID$/,"E22 Human-Made Object","P1 is identified by → E42 Identifier","Inventory number; type via P2"],
+ [/repositoryLocation\/placeID$/,"E53 Place","P1 is identified by → E42 Identifier","Repository place ID (GeoNames/GND)"],
+ [/repositoryLocation(\/.*namePlaceSet\/appellationValue)?$/,"E22 Human-Made Object","P55 has current location → E53 Place","Current location of object"],
+ [/displayObjectMeasurements$/,"E54 Dimension","P3 has note → E62 String","Display dimensions (keep verbatim)"],
+ [/measurementType$/,"E54 Dimension","P2 has type → E55 Type","Dimension type (height/width…)"],
+ [/measurementUnit$/,"E54 Dimension","P91 has unit → E58 Measurement Unit",""],
+ [/measurementValue$/,"E54 Dimension","P90 has value → E60 Number",""],
+ [/objectMeasurementsSet/,"E22 Human-Made Object","P43 has dimension → E54 Dimension",""],
+ [/eventType\/conceptID$/,"E55 Type","P1 is identified by → E42 Identifier","Event-type concept URI"],
+ [/eventType\/term$/,"E5 Event","P2 has type → E55 Type","Production → model event as E12"],
+ [/displayActorInRole$/,"E12 Production","P3 has note → E62 String","Display string; structured actor preferred"],
+ [/actor\/actorID$/,"E39 Actor","P1 is identified by → E42 Identifier","Actor authority ID (GND)"],
+ [/nameActorSet\/appellationValue$/,"E39 Actor","P1 is identified by → E41 Appellation","Actor name"],
+ [/roleActor\/(term|conceptID)$/,"E12 Production","P14 carried out by [P14.1 in the role of → E55 Type]","Role qualifies the P14 link"],
+ [/genderActor$/,"E21 Person","P2 has type → E55 Type","Gender as type (or CRMsoc)"],
+ [/nationalityActor\/term$/,"E21 Person","P107i is current or former member of → E74 Group","Nationality as group membership"],
+ [/vitalDatesActor\/earliestDate$/,"E21 Person","P98i was born → E67 Birth → P4 → E52 Time-Span","Birth date"],
+ [/vitalDatesActor\/latestDate$/,"E21 Person","P100i died in → E69 Death → P4 → E52 Time-Span","Death date"],
+ [/eventDate\/displayDate$/,"E52 Time-Span","P3 has note → E62 String","Display date (verbatim)"],
+ [/eventDate\/date\/earliestDate$/,"E52 Time-Span","P82a begin of the begin","xsd:dateTime literal"],
+ [/eventDate\/date\/latestDate$/,"E52 Time-Span","P82b end of the end","xsd:dateTime literal"],
+ [/event\/periodName\/(term|conceptID)$/,"E5 Event","P4 has time-span / P10 falls within → E4 Period","Named period"],
+ [/eventPlace\/displayPlace$/,"E53 Place","P3 has note → E62 String","Display place"],
+ [/eventPlace.*placeID$/,"E53 Place","P1 is identified by → E42 Identifier","Place authority ID"],
+ [/eventPlace.*namePlaceSet\/appellationValue$/,"E5 Event","P7 took place at → E53 Place → P1 → E41","Event place name"],
+ [/gml:Point|gml:pos|gml:coordinates/,"E53 Place","P168 place is defined by → E94 Space Primitive","WGS84 coordinates"],
+ [/displayMaterialsTech$/,"E12 Production","P3 has note → E62 String","Display materials/technique"],
+ [/termMaterialsTech\/conceptID$/,"E57 Material","P1 is identified by → E42 Identifier","Material concept URI"],
+ [/termMaterialsTech\/term$/,"E12 Production","P126 employed → E57 Material (or P32 → E55 for technique)","Disambiguate via lido:type attr"],
+ [/eventMethod\/term$/,"E12 Production","P32 used general technique → E55 Type",""],
+ [/eventDescriptionSet\/descriptiveNoteValue$/,"E5 Event","P3 has note → E62 String",""],
+ [/subjectConcept\/conceptID$/,"E55 Type","P1 is identified by → E42 Identifier","Subject concept URI (Iconclass!)"],
+ [/subjectConcept\/term$/,"E36 Visual Item","P138 represents / E22 → P65 → E36 → P129 is about → E55","Iconographic subject"],
+ [/subjectActor/,"E36 Visual Item","P138 represents → E39 Actor","Depicted actor"],
+ [/subjectPlace/,"E36 Visual Item","P138 represents → E53 Place","Depicted place"],
+ [/subjectDate/,"E36 Visual Item","P129 is about → E52 Time-Span","Depicted period"],
+ [/subjectObject/,"E36 Visual Item","P138 represents → E22 Human-Made Object","Depicted object"],
+ [/objectDescriptionSet\/descriptiveNoteValue$/,"E22 Human-Made Object","P3 has note → E62 String","Description"],
+ [/inscriptionTranscription$/,"E34 Inscription","P190 has symbolic content → E62 String","E22 → P128 carries → E34"],
+ [/inscriptions/,"E22 Human-Made Object","P128 carries → E34 Inscription",""],
+ [/relatedWork.*\/object\/objectID$/,"E22 Human-Made Object","P130 shows features of / P67 refers to → E22","Related work ID"],
+ [/relatedWork/,"E22 Human-Made Object","P130 shows features of → E22 (qualify by relType)","Related work"],
+ [/rightsWorkSet\/rightsType\/conceptID$/,"E30 Right","P1 is identified by → E42 Identifier","Licence URI"],
+ [/rightsWorkSet\/rightsType\/term$/,"E22 Human-Made Object","P104 is subject to → E30 Right → P2 → E55","Rights on work"],
+ [/rightsHolder\/legalBodyName\/appellationValue$/,"E30 Right","P105 right held by → E39 Actor → P1 → E41","Rights holder"],
+ [/rightsHolder\/legalBodyWeblink$/,"E39 Actor","P70i is documented in → E31 Document",""],
+ [/creditLine$/,"E22 Human-Made Object","P3 has note → E62 String","Credit line (type the note)"],
+ [/recordWrap\/recordID$/,"E31 Document","P48 has preferred identifier → E42 Identifier","Metadata record ID"],
+ [/recordType\/(term|conceptID)$/,"E31 Document","P2 has type → E55 Type","Record type (item/group)"],
+ [/recordSource\/legalBodyID$/,"E40 Legal Body","P1 is identified by → E42 Identifier","Record source ID"],
+ [/recordSource\/legalBodyName\/appellationValue$/,"E31 Document","P94i was created by → E65 Creation → P14 → E40 → P1 → E41","Record source"],
+ [/recordSource\/legalBodyWeblink$/,"E40 Legal Body","P70i is documented in → E31 Document",""],
+ [/recordRights\/rightsType\/(conceptID|term)$/,"E31 Document","P104 is subject to → E30 Right","Rights on metadata record"],
+ [/recordRights\/rightsHolder/,"E30 Right","P105 right held by → E39 Actor","Metadata rights holder"],
+ [/recordInfoSet\/recordInfoLink$/,"E31 Document","P70i is documented in → E31 Document","Landing page / source record"],
+ [/recordMetadataDate$/,"E31 Document","P94i was created by → E65 → P4 → E52 Time-Span","Record (meta)data date"],
+ [/resourceSet\/resourceID$/,"D1 Digital Object (CRMdig)","P1 is identified by → E42 Identifier","Resource ID"],
+ [/linkResource$/,"E22 Human-Made Object","P138i has representation → E36 Visual Item / D1 Digital Object","Digital representation URL"],
+ [/resourceRepresentation/,"E22 Human-Made Object","P138i has representation → D1 Digital Object","Image/AV resource"],
+ [/rightsResource\/rightsType/,"D1 Digital Object (CRMdig)","P104 is subject to → E30 Right","Rights on resource"],
+ [/resourceType\/term$/,"D1 Digital Object (CRMdig)","P2 has type → E55 Type",""],
+ [/resourceDateTaken/,"D1 Digital Object (CRMdig)","L11i was output of → D7 → P4 → E52","Capture date"],
+ [/\/category\/(term|conceptID)$/,"E22 Human-Made Object","P2 has type → E55 Type","CIDOC-CRM category (usually crm:E22 URI)"],
+ [/objectNote$/,"E22 Human-Made Object","P3 has note → E62 String",""],
+ [/displayStateEditionWrap|displayState|displayEdition/,"E22 Human-Made Object","P3 has note → E62 String","State/edition note"],
+ [/mods:|mets:|marc:|oai:|dv:/,"E31 Document","— non-LIDO envelope (METS/MODS/OAI) —","Usually pipeline metadata, not object data"],
+];
+function suggest(p){
+  for(const [rx,e,pp,note] of RULES) if(rx.test(p)) return {e,pp,note};
+  return null;
+}
+
+/* ════════ helpers ════════ */
+const $=s=>document.querySelector(s);
+const fmt=n=>n.toLocaleString('en-US');
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+function barW(c){return Math.max(2,Math.round(Math.log10(c+1)/LOGMAX*100))}
+
+/* ════════ tree model ════════ */
+const root={name:'',children:new Map(),total:0,own:null};
+for(const o of PATHS){
+  let node=root;
+  const segs=o.p.split('/').slice(1);
+  for(const s of segs){
+    if(!node.children.has(s)) node.children.set(s,{name:s,children:new Map(),total:0,own:null});
+    node=node.children.get(s);
+    node.total+=o.c;
+  }
+  node.own=o;
+}
+const open=new Set(['/lido','/lido/descriptiveMetadata','/lido/administrativeMetadata']);
+
+/* ════════ state ════════ */
+let view='tree', query='', unmappedOnly=false, sort='c-desc', selId=null;
+
+/* ════════ render: tree ════════ */
+function renderTree(){
+  const v=$('#view'); v.innerHTML='';
+  const frag=document.createDocumentFragment();
+  const q=query.toLowerCase();
+  let shown=0;
+  function visible(node,path){ // node passes filter if any descendant leaf passes
+    if(node.own && leafPass(node.own)) return true;
+    for(const ch of node.children.values()) if(visible(ch,path+'/'+ch.name)) return true;
+    return false;
+  }
+  function leafPass(o){
+    if(q && !o.p.toLowerCase().includes(q)) return false;
+    if(unmappedOnly && mappings.has(o.id)) return false;
+    return true;
+  }
+  function walk(node,path,depth){
+    if(path && !visible(node,path)) return;
+    if(path){
+      const hasKids=node.children.size>0;
+      const isOpen=open.has(path)||q;   // auto-expand while filtering
+      const row=document.createElement('div');
+      row.className='trow'+(node.own&&node.own.id===selId?' sel':'');
+      row.style.paddingLeft=(depth*18)+'px';
+      row.setAttribute('role','treeitem');
+      const o=node.own;
+      const rep=o&&o.m?Math.max(...Object.values(o.m)):0;
+      row.innerHTML=
+        `<span class="tw">${hasKids?(isOpen?'▾':'▸'):'·'}</span>`+
+        `<span class="tname ${hasKids?'branch':'leaf'}">${esc(node.name)}</span>`+
+        (o?`${rep?`<span class="rep" title="repeats up to ×${rep} within one document">×${rep}</span>`:''}`+
+            `<span class="mdot ${mappings.has(o.id)?'yes':'no'}" title="${mappings.has(o.id)?'mapped':'not mapped'}"></span>`:'')+
+        `<span class="tcount">${fmt(node.total)}</span>`+
+        `<span class="bar" title="${fmt(node.total)} occurrences (log scale)"><i style="width:${barW(node.total)}%"></i></span>`;
+      row.onclick=e=>{
+        if(hasKids){ open.has(path)?open.delete(path):open.add(path); }
+        if(o) select(o.id);
+        renderTree();
+      };
+      frag.appendChild(row); shown++;
+      if(!isOpen) return;
+    }
+    const kids=[...node.children.values()].sort((a,b)=>b.total-a.total);
+    for(const ch of kids) walk(ch,path+'/'+ch.name,depth+1);
+  }
+  walk(root,'',0);
+  v.appendChild(frag);
+  $('#statusline').textContent=`${shown} tree rows · counts aggregate all descendants · bars are log-scale`;
+}
+
+/* ════════ render: table ════════ */
+function filtered(){
+  const q=query.toLowerCase();
+  let rows=PATHS.filter(o=>(!q||o.p.toLowerCase().includes(q))&&(!unmappedOnly||!mappings.has(o.id)));
+  const [k,dir]=sort.split('-'); const s=dir==='asc'?1:-1;
+  rows.sort((a,b)=>k==='p'?s*a.p.localeCompare(b.p):k==='d'?s*(a.depth-b.depth):s*(a[k]-b[k]));
+  return rows;
+}
+function renderTable(){
+  const v=$('#view');
+  const rows=filtered();
+  let h=`<table><thead><tr>
+    <th data-s="c">Count</th><th>Usage</th><th data-s="p">Path (lido: implied)</th>
+    <th data-s="v">Variants</th><th>Max ×</th><th data-s="d">Depth</th><th>CRM mapping</th>
+  </tr></thead><tbody>`;
+  for(const o of rows){
+    const m=mappings.get(o.id);
+    const rep=o.m?Math.max(...Object.values(o.m)):'';
+    const parts=o.p.split('/');
+    const lastSeg=parts.pop();
+    h+=`<tr data-id="${o.id}" class="${o.id===selId?'sel':''}">
+      <td class="num">${fmt(o.c)}</td>
+      <td><span class="bar" style="display:inline-block;vertical-align:middle"><i style="width:${barW(o.c)}%"></i></span></td>
+      <td class="path" title="${esc(o.p)}"><span class="pwrap"><span class="dim">${esc(parts.join('/'))}/</span><span class="lastseg">${esc(lastSeg)}</span></span></td>
+      <td class="num">${fmt(o.v)}</td>
+      <td class="num">${rep?`<span class="rep">×${rep}</span>`:''}</td>
+      <td class="num">${o.depth}</td>
+      <td class="crm">${m?esc(m.e+(m.pp?' · '+m.pp:'')):'<span style="color:#B9C4C0">—</span>'}</td>
+    </tr>`;
+  }
+  h+='</tbody></table>';
+  v.innerHTML=h;
+  v.querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>{select(+tr.dataset.id);renderTable();});
+  v.querySelectorAll('thead th[data-s]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.s;
+    sort=sort===k+'-desc'?k+'-asc':k+'-desc';
+    $('#sortSel').value=['c-desc','c-asc','p-asc','v-desc','d-desc'].includes(sort)?sort:$('#sortSel').value;
+    renderTable();
+  });
+  $('#statusline').textContent=`${rows.length} of ${PATHS.length} canonical paths shown`;
+}
+
+/* ════════ inspector ════════ */
+function select(id){
+  selId=id;
+  const o=PATHS[id];
+  const parts=o.p.split('/');
+  const last=parts.pop();
+  $('#ipath').innerHTML=`${esc(parts.join('/'))}/<span class="seg-last">${esc(last)}</span>`;
+  const m=mappings.get(id)||{e:'',pp:'',note:''};
+  const sg=suggest(o.p);
+  const repHtml=o.m?`<div class="repdetail"><b>In-document repetition</b> (max index seen):<br>${
+      Object.entries(o.m).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${esc(k)} ×${v}`).join(' · ')
+    }</div>`:'';
+  $('#ibody').innerHTML=`
+    <div class="facts">
+      <div class="fact"><b>${fmt(o.c)}</b><span>occurrences</span></div>
+      <div class="fact"><b>${fmt(o.v)}</b><span>indexed variants</span></div>
+      <div class="fact"><b>${o.depth}</b><span>depth</span></div>
+      <div class="fact"><b>${(o.c/RAW.totalOcc*100).toFixed(2)}%</b><span>of all elements</span></div>
+    </div>
+    ${repHtml}
+    <div class="flabel">CRM entity (range / context class)</div>
+    <input class="ifield" id="f-e" list="dl-classes" value="${esc(m.e)}" placeholder="e.g. E22 Human-Made Object" autocomplete="off">
+    <div class="flabel">Property path</div>
+    <input class="ifield" id="f-pp" list="dl-props" value="${esc(m.pp)}" placeholder="e.g. P102 has title → E35 Title" autocomplete="off">
+    <div class="flabel">Note</div>
+    <textarea class="ifield" id="f-note" placeholder="Mapping decisions, conditions, attribute handling…">${esc(m.note)}</textarea>
+    ${sg?`<div class="sugg"><div class="stitle">Suggested mapping</div>
+      <div class="smap"><b>${esc(sg.e)}</b><br>${esc(sg.pp)}${sg.note?`<br><span style="color:var(--muted)">${esc(sg.note)}</span>`:''}</div>
+      <button class="btn pri" id="applySugg">Apply suggestion</button></div>`:''}
+    <div class="irow">
+      <button class="btn pri" id="saveMap">Save mapping</button>
+      <button class="btn ghost" id="clearMap">Clear</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="copyPath" style="border-color:var(--line);color:var(--ink)">Copy XPath</button>
+    </div>`;
+  $('#saveMap').onclick=()=>{
+    const e=$('#f-e').value.trim(), pp=$('#f-pp').value.trim(), note=$('#f-note').value.trim();
+    if(!e&&!pp&&!note){mappings.delete(id);}else{mappings.set(id,{e,pp,note});}
+    refreshCoverage(); rerender(); toast('Mapping saved');
+  };
+  $('#clearMap').onclick=()=>{mappings.delete(id);select(id);refreshCoverage();rerender();toast('Mapping cleared')};
+  if(sg) $('#applySugg').onclick=()=>{$('#f-e').value=sg.e;$('#f-pp').value=sg.pp;if(!$('#f-note').value)$('#f-note').value=sg.note||'';};
+  $('#copyPath').onclick=()=>{
+    const full='/'+o.p.split('/').slice(1).map(s=>s.includes(':')?s:'lido:'+s).join('/');
+    navigator.clipboard?.writeText(full).then(()=>toast('XPath copied'),()=>toast('Copy failed — select manually'));
+  };
+}
+
+/* ════════ coverage ring ════════ */
+function refreshCoverage(){
+  const n=mappings.size, pct=Math.round(n/PATHS.length*100);
+  $('#st-mapped').textContent=fmt(n);
+  $('#ringPct').textContent=pct+'%';
+  $('#ringArc').style.strokeDashoffset=(138.2*(1-n/PATHS.length)).toFixed(1);
+}
+
+/* ════════ export / import ════════ */
+function download(name,text,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+$('#expJson').onclick=()=>{
+  const out={generated:new Date().toISOString(),source:'ddb_s6_source_xpaths.tsv',
+    note:'Unprefixed segments are in the lido: namespace',
+    mappings:[...mappings.entries()].map(([id,m])=>({path:PATHS[id].p,count:PATHS[id].c,...m}))};
+  download('lido_crm_mappings.json',JSON.stringify(out,null,2),'application/json');
+  toast(`Exported ${mappings.size} mappings`);
+};
+$('#expCsv').onclick=()=>{
+  const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+  let csv='path,count,variants,max_repetition,depth,crm_entity,crm_property_path,note\n';
+  for(const o of filtered()){
+    const m=mappings.get(o.id)||{};
+    csv+=[q(o.p),o.c,o.v,o.m?Math.max(...Object.values(o.m)):'',o.depth,q(m.e),q(m.pp),q(m.note)].join(',')+'\n';
+  }
+  download('lido_xpaths_crm.csv',csv,'text/csv');
+  toast('CSV exported (current filter)');
+};
+$('#impJson').onclick=()=>$('#impFile').click();
+$('#impFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  f.text().then(t=>{
+    try{
+      const j=JSON.parse(t); let n=0;
+      for(const m of (j.mappings||j)){
+        const o=byPath.get(m.path); if(!o)continue;
+        mappings.set(o.id,{e:m.e||'',pp:m.pp||'',note:m.note||''}); n++;
+      }
+      refreshCoverage(); rerender(); if(selId!=null)select(selId);
+      toast(`Imported ${n} mappings`);
+    }catch(err){toast('Import failed: not valid mapping JSON')}
+  });
+  e.target.value='';
+};
+
+/* ════════ wiring ════════ */
+function rerender(){view==='tree'?renderTree():renderTable()}
+$('#tabTree').onclick=()=>{view='tree';$('#tabTree').classList.add('on');$('#tabTable').classList.remove('on');rerender()};
+$('#tabTable').onclick=()=>{view='table';$('#tabTable').classList.add('on');$('#tabTree').classList.remove('on');rerender()};
+$('#q').oninput=e=>{query=e.target.value.trim();rerender()};
+$('#chipUnmapped').onclick=e=>{unmappedOnly=!unmappedOnly;e.target.classList.toggle('on',unmappedOnly);rerender()};
+$('#sortSel').onchange=e=>{sort=e.target.value;if(view!=='table'){view='table';$('#tabTable').click()}else rerender()};
+$('#expandAll').onclick=()=>{(function w(n,p){for(const c of n.children.values()){open.add(p+'/'+c.name);w(c,p+'/'+c.name)}})(root,'');rerender()};
+$('#collapseAll').onclick=()=>{open.clear();open.add('/lido');rerender()};
+
+/* datalists */
+$('#dl-classes').innerHTML=CRM_CLASSES.map(c=>`<option value="${c}">`).join('');
+$('#dl-props').innerHTML=CRM_PROPS.map(p=>`<option value="${p}">`).join('');
+
+/* header stats */
+$('#st-paths').textContent=fmt(PATHS.length);
+$('#st-raw').textContent=fmt(RAW.rawLines);
+$('#st-occ').textContent=(RAW.totalOcc/1e6).toFixed(1)+' M';
+refreshCoverage();
+renderTree();
+</script>
+</body>
+</html>
