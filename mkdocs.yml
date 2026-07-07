@@ -10,6 +10,7 @@ nav:
       - IIIF CLIP: "tech/images.md"
       - Entity Resolution: "tech/entities.md"
       - LIDO: "tech/lido.md"
+      - LODEON: "tech/lodeon.md"
 
 theme:
   name: material
