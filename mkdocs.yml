@@ -4,13 +4,16 @@ nav:
   - Introduction: "index.md"
   - SPARQL: "sparql.md"
   - Ontology: "ontology.md"
-  - Data Sources: "datasources/index.md"
+  - Data Sources: 
+    - Overview: "datasources/index.md"
+    - Documentation per feed: "datasources/notes.md"
   - Technologies:
       - Kitchen: "tech/kitchen.md"
       - IIIF CLIP: "tech/images.md"
       - Entity Resolution: "tech/entities.md"
       - LIDO: "tech/lido.md"
       - LODEON: "tech/lodeon.md"
+  - TODO List: "todo.md"
 
 theme:
   name: material
