@@ -46,18 +46,21 @@ WHERE {
 LIMIT 10
 ```
 
-But by looking at the [ontology]('../ontology.md#core-cto-classes') we can find some information on the data feed integration,
+But by looking at the [ontology](../ontology.md#core-cto-classes) we can find some information on the data feed integration,
 
-Watch out! If you try and do this, you will get zero results because of the http vs https scheme for Schema
+!!! Careful
 
-```sparql hl_lines="1" title="Schema prefix with https"
-PREFIX schema: <https://schema.org/>
+    Watch out! If you try and query for schema.org properties like this example, you will get zero results because of the http vs https scheme for Schema.org
 
-SELECT *
-WHERE {
-?s ?p schema:DataFeed .
-}
-```
+    ```sparql hl_lines="1" title="Schema prefix with https"
+    PREFIX schema: <https://schema.org/>
+
+    SELECT *
+    WHERE {
+    ?s ?p schema:DataFeed .
+    }
+    # Gives zero results!
+    ```
 
 We can see how many items are in a datafeed with:
 
