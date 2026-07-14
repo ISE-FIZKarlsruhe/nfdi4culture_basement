@@ -1,5 +1,9 @@
 site_name: NFDI4Culture Basement Laboratory
 site_description: A datastory on what lies underneath the Kitchen
+repo_url: https://github.com/ISE-FIZKarlsruhe/nfdi4culture_basement
+repo_name: See the Github Repo
+edit_uri: edit/main/docs/
+
 nav:
   - Introduction: "index.md"
   - SPARQL: "sparql.md"
@@ -17,12 +21,13 @@ nav:
   - TODO List: "todo.md"
 
 theme:
-  name: material
+  name: material  
   custom_dir: docs/overrides
   palette:
     primary: teal
     accent: pink
   features:
+    - content.action.edit
     - content.code.copy
     - navigation.instant
     - navigation.instant.progress
