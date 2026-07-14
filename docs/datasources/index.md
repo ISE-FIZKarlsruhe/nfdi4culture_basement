@@ -18,7 +18,7 @@ WHERE {
 ORDER BY ?nfdi4cID
 ```
 
-Note how some items are appearing more than once, so possibly they have multiple triples.
+Note how some items are appearing more than once, so possibly they have multiple triples. (eg. https://nfdi4culture.de/id/E5313 ) As an aside, we do not currenlty use named graphs in the KG, it is worth investigating this as well.
 
 ## Exploring the Knowledge Graph
 

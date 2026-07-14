@@ -7,6 +7,7 @@ nav:
   - Data Sources: 
     - Overview: "datasources/index.md"
     - Documentation per feed: "datasources/notes.md"
+    - Research Data Graph: "datasources/rdg.md"
   - Technologies:
       - Kitchen: "tech/kitchen.md"
       - IIIF CLIP: "tech/images.md"
@@ -59,6 +60,9 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: false
 
 extra_javascript:
   - javascript/shmarql.js
