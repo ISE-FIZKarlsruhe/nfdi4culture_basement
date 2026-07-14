@@ -1,6 +1,6 @@
 # Introduction
 
-These pages are a combination of 'eating your own dogfood' and testing/documentation space - in showing how to write datastories, and making documentation on the 'Basement' - the things which are underneath the [Kitchen](tech/kitchen.md).
+Made for [NFDI4Culture](https://nfdi4culture.de/), these pages are a combination of 'eating your own dogfood' and testing/documentation space - in showing how to write datastories, and making documentation on the 'Basement' - the things which are underneath the [Kitchen](tech/kitchen.md).
 
 As this documentation is _also_ a data story, we can also use it to test the latest [SHMARQL](https://shmarql.com/) features to make sure everything works okay
 
