@@ -12,6 +12,7 @@ nav:
     - Overview: "datasources/index.md"
     - Documentation per feed: "datasources/notes.md"
     - Research Data Graph: "datasources/rdg.md"
+  - Datastories: "datastories.md"
   - Applications: "applications.md"
   - Technologies:
       - Kitchen: "tech/kitchen.md"
