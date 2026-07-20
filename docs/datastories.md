@@ -5,7 +5,7 @@ In 2026, a major re-vamp was done adding the LODEON features as part of the work
 
 ## KIT Praktikum course
 
-Starting in 2025, the FIZ ISE group ran a series of practikum courses at the KIT using the NFDI4Culture research data graph. Students were asked to create data stories using one or more of the datafeeds.
+Starting in 2025, the FIZ ISE group ran a series of praktikum courses at the KIT using the NFDI4Culture research data graph. Students were asked to create data stories using one or more of the datafeeds. [Course repo here](https://github.com/ISE-FIZKarlsruhe/course-data-stories)
 
 Results repo from the students at:
 
