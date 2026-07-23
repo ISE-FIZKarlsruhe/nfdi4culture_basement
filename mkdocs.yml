@@ -19,11 +19,7 @@ nav:
       - Entity Resolution: "tech/entities.md"
       - LIDO: "tech/lido.md"
       - LODEON: "tech/lodeon.md"
-      - Search:
-        - Full Text (BM25): "tech/search_fulltext.md"
-        - Text embeddings: "tech/search_embeddings.md"
-        - Image embeddings: "tech/images.md"
-        - Triple embeddings: "tech/rdf2vec.md"
+      - Search: "tech/search.md"
   - TODO List: "todo.md"
 
 theme:

@@ -62,6 +62,15 @@ But by looking at the [ontology](../ontology.md#core-cto-classes) we can find so
     # Gives zero results!
     ```
 
+## How many triples in the graph?
+
+```shmarql
+SELECT (COUNT(?sub) AS ?cnt)
+WHERE {
+  ?sub ?pred ?obj .
+}
+```
+
 We can see how many items are in a datafeed with:
 
 ```shmarql
