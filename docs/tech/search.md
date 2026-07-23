@@ -18,3 +18,6 @@ Similar to [RDF2Vec](https://rdf2vec.org/), but tuned for larger datasets.
 We are working on an implementation that can handle large graph sizes efficiently. Current code [here](https://github.com/ISE-FIZKarlsruhe/bikidata/blob/fix_embeds/src/bikidata/rdf2vec.py).
 
 Looking at the situation in July 2026, we had 107_849_417 triples over 18_942_001 entities. Generating 100 random walks of length 15 on teach2 in paralllel using all cores and an efficient C-based [graph library](https://igraph.org/) still takes circa 800 seconds per batch of 1000 items. That would mean (18_942_001 \* 800 / 1000 / 60 / 60 / 24) = ± 175 days to just generate the random walks. We can't wait that long. How can we speed this up more? Where is the bottleneck?
+
+Do we really need to have **all** the triples in memory when we are doing the random walks, or can we get away with "trimming" away certain properties? For example, if we exclude the schema:dataFeedElements, it goes down to 95_488_329 / 107_849_417, already a reduction to 88%
+But we need a bigger improvement, this is still not enough. We will ask Claude for some tuning advice...
