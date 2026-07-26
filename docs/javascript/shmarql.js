@@ -36,7 +36,7 @@
 
   function execQueryToBlock(query, prevQuery, destinationBlock) {
     fetch(
-      "../shmarql/fragments/sparql?query=" +
+      "/shmarql/fragments/sparql?query=" +
         encodeURIComponent(query) +
         "&prev_query=" +
         encodeURIComponent(prevQuery),

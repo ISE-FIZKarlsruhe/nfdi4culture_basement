@@ -6,7 +6,7 @@ edit_uri: edit/main/docs/
 
 nav:
   - Introduction: "index.md"
-  - SPARQL: "sparql.md"
+  - SPARQL Queries: "sparql.md"
   - Ontology: "ontology.md"
   - Data Sources: 
     - Overview: "datasources/index.md"
